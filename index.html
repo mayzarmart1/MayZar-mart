@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MayZar Mart | Online Store</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-area">
+      <img src="logo.png" alt="MayZar Mart Logo" class="logo">
+      <h1>MayZar Mart</h1>
+    </div>
+
+    <nav>
+      <a href="#products">Products</a>
+      <a href="#cart">Cart 🛒</a>
+      <a href="#checkout">Checkout</a>
+      <a href="admin.html" target="_blank">Admin</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h2>Welcome to MayZar Mart </h2>
+    <p>Shop electronics, fashion & home essentials with fast delivery in Kenya.</p>
+  </section>
+
+  <!-- SEARCH + FILTER -->
+  <section class="section">
+    <h3>🔍 Search Products</h3>
+
+    <div class="filter-box">
+      <input type="text" id="searchInput" placeholder="Search product name..." onkeyup="displayProducts()">
+
+      <select id="categoryFilter" onchange="displayProducts()">
+        <option value="All">All Categories</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Fashion">Fashion</option>
+        <option value="Home">Home</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="section" id="products">
+    <h3>🛍 Products</h3>
+    <div class="products" id="productList"></div>
+  </section>
+
+  <!-- PRODUCT DETAILS MODAL -->
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">✖</span>
+      <img id="modalImage" src="" alt="Product Image">
+      <h2 id="modalName"></h2>
+      <p id="modalDesc"></p>
+      <h3>Ksh <span id="modalPrice"></span></h3>
+      <button class="btn" onclick="addModalToCart()">Add to Cart</button>
+    </div>
+  </div>
+
+  <!-- CART -->
+  <section class="section" id="cart">
+    <h3>🛒 Shopping Cart</h3>
+
+    <div class="cart-box">
+      <ul id="cartItems"></ul>
+      <h4>Subtotal: Ksh <span id="cartTotal">0</span></h4>
+      <button class="clear-btn" onclick="clearCart()">Clear Cart</button>
+    </div>
+  </section>
+
+  <!-- CHECKOUT -->
+  <section class="section" id="checkout">
+    <h3>✅ Checkout</h3>
+
+    <div class="checkout-box">
+      <p><b>Fill your details:</b></p>
+
+      <input type="text" id="customerName" placeholder="Your Full Name">
+      <input type="text" id="customerPhone" placeholder="Phone Number">
+      <input type="text" id="customerLocation" placeholder="Location (Nairobi / Other town)">
+      
+      <h4>Delivery Fee: Ksh <span id="deliveryFee">0</span></h4>
+      <h4>Grand Total: Ksh <span id="grandTotal">0</span></h4>
+
+      <button class="btn" onclick="calculateDelivery()">Calculate Delivery</button>
+      <button class="btn" onclick="sendWhatsAppOrder()">Place Order via WhatsApp 💬</button>
+    </div>
+  </section>
+
+  <!-- PAYMENT -->
+  <section class="section" id="payment">
+    <h3>💳 M-Pesa Payment</h3>
+
+    <div class="payment-box">
+      <p><b>Pay using M-Pesa:</b></p>
+      <p>1️⃣ Go to M-Pesa</p>
+      <p>2️⃣ Select <b>Lipa na M-Pesa</b></p>
+      <p>3️⃣ Select <b>Paybill</b></p>
+      <p>4️⃣ Business Number: <b>XXXXXX</b></p>
+      <p>5️⃣ Account Number: <b>MayZarMart</b></p>
+      <p>6️⃣ Enter Amount and Confirm</p>
+      <p><b>After payment send screenshot on WhatsApp.</b></p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2022 MayZar Mart | All Rights Reserved</p>
+  </footer>
+
+
+  <script>
+    // PRODUCTS DATABASE (Default)
+    let products = JSON.parse(localStorage.getItem("products")) || [
+      {
+        id: 1,
+        name: "Smart Watch",
+        price: 2500,
+        category: "Electronics",
+        desc: "High quality smart watch with fitness tracker & Bluetooth.",
+        img: "https://via.placeholder.com/300x200"
+      },
+      {
+        id: 2,
+        name: "Wireless Earbuds",
+        price: 1800,
+        category: "Electronics",
+        desc: "Clear sound wireless earbuds with long battery life.",
+        img: "https://via.placeholder.com/300x200"
+      },
+      {
+        id: 3,
+        name: "Men Sneakers",
+        price: 2200,
+        category: "Fashion",
+        desc: "Comfortable sneakers for daily wear and sports.",
+        img: "https://via.placeholder.com/300x200"
+      },
+      {
+        id: 4,
+        name: "Ladies Handbag",
+        price: 1600,
+        category: "Fashion",
+        desc: "Stylish handbag with premium finishing.",
+        img: "https://via.placeholder.com/300x200"
+      },
+      {
+        id: 5,
+        name: "Cooking Pan Set",
+        price: 3200,
+        category: "Home",
+        desc: "Non-stick cooking pan set, durable and easy to clean.",
+        img: "https://via.placeholder.com/300x200"
+      }
+    ];
+
+    localStorage.setItem("products", JSON.stringify(products));
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    // DISPLAY PRODUCTS
+    function displayProducts() {
+      let productList = document.getElementById("productList");
+      let searchValue = document.getElementById("searchInput").value.toLowerCase();
+      let categoryValue = document.getElementById("categoryFilter").value;
+
+      productList.innerHTML = "";
+
+      products.forEach(product => {
+        if (
+          (categoryValue === "All" || product.category === categoryValue) &&
+          product.name.toLowerCase().includes(searchValue)
+        ) {
+          productList.innerHTML += `
+            <div class="product">
+              <img src="${product.img}" alt="${product.name}">
+              <h4>${product.name}</h4>
+              <p><b>Category:</b> ${product.category}</p>
+              <p>Ksh ${product.price}</p>
+
+              <button onclick="openModal(${product.id})">View Details</button>
+              <button onclick="addToCart('${product.name}', ${product.price})">Add to Cart</button>
+            </div>
+          `;
+        }
+      });
+    }
+
+    // MODAL DETAILS
+    let selectedProduct = null;
+
+    function openModal(productId) {
+      selectedProduct = products.find(p => p.id === productId);
+
+      document.getElementById("modalImage").src = selectedProduct.img;
+      document.getElementById("modalName").innerText = selectedProduct.name;
+      document.getElementById("modalDesc").innerText = selectedProduct.desc;
+      document.getElementById("modalPrice").innerText = selectedProduct.price;
+
+      document.getElementById("productModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("productModal").style.display = "none";
+    }
+
+    function addModalToCart() {
+      if (selectedProduct) {
+        addToCart(selectedProduct.name, selectedProduct.price);
+        closeModal();
+      }
+    }
+
+    // CART FUNCTIONS
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      localStorage.setItem("cart", JSON.stringify(cart));
+      displayCart();
+      alert(name + " added to cart!");
+    }
+
+    function displayCart() {
+      let cartItems = document.getElementById("cartItems");
+      let cartTotal = document.getElementById("cartTotal");
+
+      cartItems.innerHTML = "";
+      let total = 0;
+
+      cart.forEach((item, index) => {
+        total += item.price;
+
+        cartItems.innerHTML += `
+          <li>
+            ${item.name} - Ksh ${item.price}
+            <button onclick="removeItem(${index})">❌</button>
+          </li>
+        `;
+      });
+
+      cartTotal.innerText = total;
+      updateGrandTotal();
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      displayCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      localStorage.setItem("cart", JSON.stringify(cart));
+      displayCart();
+    }
+
+    // DELIVERY FEE CALCULATION
+    function calculateDelivery() {
+      let location = document.getElementById("customerLocation").value.toLowerCase();
+      let delivery = 0;
+
+      if (location.includes("nairobi")) {
+        delivery = 200;
+      } else {
+        delivery = 350;
+      }
+
+      document.getElementById("deliveryFee").innerText = delivery;
+      updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+      let subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+      let delivery = parseInt(document.getElementById("deliveryFee").innerText) || 0;
+      document.getElementById("grandTotal").innerText = subtotal + delivery;
+    }
+
+    // WHATSAPP ORDER
+    function sendWhatsAppOrder() {
+      let name = document.getElementById("customerName").value;
+      let phone = document.getElementById("customerPhone").value;
+      let location = document.getElementById("customerLocation").value;
+
+      if (!name || !phone || !location) {
+        alert("Please fill all checkout details!");
+        return;
+      }
+
+      if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+      }
+
+      calculateDelivery();
+
+      let subtotal = cart.reduce((sum, item) => sum + item.price, 0);
+      let delivery = parseInt(document.getElementById("deliveryFee").innerText);
+      let grandTotal = subtotal + delivery;
+
+      let message = `Hello MayZar Mart,%0A%0A`;
+      message += `🛒 *New Order*%0A`;
+      message += `👤 Name: ${name}%0A`;
+      message += `📞 Phone: ${phone}%0A`;
+      message += `📍 Location: ${location}%0A%0A`;
+
+      message += `📦 Items:%0A`;
+
+      cart.forEach(item => {
+        message += `- ${item.name} (Ksh ${item.price})%0A`;
+      });
+
+      message += `%0ASubtotal: Ksh ${subtotal}%0A`;
+      message += `Delivery Fee: Ksh ${delivery}%0A`;
+      message += `💰 *Grand Total: Ksh ${grandTotal}*%0A%0A`;
+      message += `Please confirm payment details (M-Pesa).`;
+
+      let whatsappNumber = "254714299737";
+<p>✉ Email: support@mayzar2342.com</p>
+      // CHANGE THIS NUMBER
+      window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
+    }
+
+    displayProducts();
+    displayCart();
+  </script>
+
+</body>
+</html>p
